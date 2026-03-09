@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お知らせ — 志學館生徒会</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;600&family=Noto+Sans+JP:wght@300;400;500&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1a2e; --ink-light: #3d3d5c;
+      --paper: #f5f0e8; --paper-dark: #ede6d6;
+      --vermillion: #c0392b; --gold: #b8860b; --gold-light: #d4a017;
+      --shadow: rgba(26,26,46,0.12);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--paper); color: var(--ink); font-family: 'Noto Sans JP', sans-serif; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(26,26,46,0.025) 40px, rgba(26,26,46,0.025) 41px),
+        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(26,26,46,0.025) 40px, rgba(26,26,46,0.025) 41px);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── ナビ ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px; display: flex; align-items: center; padding: 0 48px;
+      background: rgba(245,240,232,0.94); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--ink); }
+    .nav-logo-mark { width: 36px; height: 36px; border: 1.5px solid var(--vermillion); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Shippori Mincho', serif; font-size: 15px; color: var(--vermillion); font-weight: 600; }
+    .nav-logo-text { font-family: 'Shippori Mincho', serif; font-size: 14px; font-weight: 400; letter-spacing: 0.25em; }
+    .nav-logo-sub { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-light); opacity: 0.6; }
+    .nav-back { margin-left: auto; font-size: 11px; letter-spacing: 0.2em; color: var(--ink-light); text-decoration: none; opacity: 0.7; transition: opacity 0.2s, color 0.2s; display: flex; align-items: center; gap: 8px; }
+    .nav-back:hover { opacity: 1; color: var(--vermillion); }
+    .nav-back::before { content: '←'; font-size: 13px; }
+
+    /* ── アクセントライン ── */
+    .accent-line { position: fixed; left: 28px; top: 64px; bottom: 0; width: 1.5px; background: linear-gradient(to bottom, var(--vermillion) 0%, transparent 100%); opacity: 0.2; z-index: 1; pointer-events: none; }
+    .accent-line-right { left: auto; right: 28px; }
+
+    /* ── メインコンテンツ ── */
+    .article-wrap {
+      position: relative; z-index: 1;
+      max-width: 760px; margin: 0 auto;
+      padding: 120px 48px 100px;
+    }
+
+    /* ── パンくず ── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 10px; letter-spacing: 0.2em; color: var(--ink-light); opacity: 0.5;
+      margin-bottom: 40px;
+    }
+    .breadcrumb a { color: inherit; text-decoration: none; transition: opacity 0.2s; }
+    .breadcrumb a:hover { opacity: 1; color: var(--vermillion); }
+    .breadcrumb-sep { opacity: 0.4; }
+
+    /* ── 記事ヘッダー ── */
+    .article-header { margin-bottom: 48px; }
+    .article-meta { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .article-date { font-size: 11px; letter-spacing: 0.15em; color: var(--ink-light); opacity: 0.6; }
+    .article-tag { font-size: 9px; letter-spacing: 0.2em; padding: 3px 12px; border: 1px solid currentColor; }
+    .article-tag.event  { color: var(--vermillion); }
+    .article-tag.report { color: var(--gold); }
+    .article-tag.notice { color: var(--ink-light); }
+    .article-title {
+      font-family: 'Shippori Mincho', serif;
+      font-size: clamp(22px, 4vw, 34px); font-weight: 400;
+      letter-spacing: 0.12em; line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .article-divider { display: flex; align-items: center; gap: 16px; width: 200px; }
+    .article-divider-line { flex: 1; height: 1px; background: linear-gradient(to right, var(--gold), transparent); }
+    .article-divider-diamond { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+
+    /* ── アイキャッチ画像 ── */
+    .article-eyecatch {
+      width: 100%; max-height: 480px; object-fit: cover;
+      margin-bottom: 48px; display: block;
+      border: 1px solid rgba(26,26,46,0.08);
+    }
+
+    /* ── 本文 ── */
+    .article-body {
+      font-size: 15px; line-height: 2.2; letter-spacing: 0.04em;
+      color: var(--ink-light);
+      white-space: pre-wrap;
+    }
+    .article-body-empty {
+      font-size: 13px; color: var(--ink-light); opacity: 0.4;
+      text-align: center; padding: 48px 0; letter-spacing: 0.1em;
+    }
+
+    /* ── 戻るボタン ── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-top: 64px; padding: 14px 32px;
+      border: 1px solid rgba(26,26,46,0.2); background: none;
+      font-family: 'Noto Sans JP', sans-serif; font-size: 11px;
+      letter-spacing: 0.25em; color: var(--ink-light); text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .back-btn:hover { border-color: var(--vermillion); color: var(--vermillion); }
+    .back-btn::before { content: '←'; }
+
+    /* ── 前後ナビ ── */
+    .article-nav {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-top: 64px; padding-top: 40px;
+      border-top: 1px solid rgba(26,26,46,0.08);
+    }
+    .article-nav-item {
+      padding: 20px; background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(26,26,46,0.08); text-decoration: none; color: var(--ink);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .article-nav-item:hover { border-color: var(--vermillion); background: rgba(255,255,255,0.8); }
+    .article-nav-item.next { text-align: right; }
+    .article-nav-label { font-size: 9px; letter-spacing: 0.3em; color: var(--vermillion); margin-bottom: 8px; }
+    .article-nav-title { font-size: 12px; letter-spacing: 0.05em; line-height: 1.6; color: var(--ink-light); }
+
+    /* ── ローディング・エラー ── */
+    .loading { text-align: center; padding: 80px 20px; color: var(--ink-light); opacity: 0.4; font-size: 13px; letter-spacing: 0.15em; }
+    .loading-kanji { font-family: 'Shippori Mincho', serif; font-size: 48px; font-weight: 300; margin-bottom: 16px; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+    .error-state { text-align: center; padding: 80px 20px; }
+    .error-kanji { font-family: 'Shippori Mincho', serif; font-size: 48px; color: var(--ink-light); opacity: 0.3; margin-bottom: 16px; }
+    .error-msg { font-size: 13px; color: var(--ink-light); opacity: 0.5; letter-spacing: 0.1em; margin-bottom: 32px; }
+
+    /* ── アニメ ── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .article-wrap { animation: fadeUp 0.6s ease both; }
+
+    /* ── レスポンシブ ── */
+    @media (max-width: 768px) {
+      .nav { padding: 0 20px; }
+      .article-wrap { padding: 100px 24px 80px; }
+      .accent-line { display: none; }
+      .article-nav { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="accent-line"></div>
+<div class="accent-line accent-line-right"></div>
+
+<nav class="nav">
+  <a class="nav-logo" href="school.html">
+    <div class="nav-logo-mark">志</div>
+    <div>
+      <div class="nav-logo-text">志學館生徒会</div>
+      <div class="nav-logo-sub">SGK STUDENT COUNCIL</div>
+    </div>
+  </a>
+  <a class="nav-back" href="school.html" onclick="event.preventDefault();location.replace('school.html')">お知らせ一覧へ戻る</a>
+</nav>
+
+<main class="article-wrap" id="articleWrap">
+  <div class="loading">
+    <div class="loading-kanji">読</div>
+    読み込み中...
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA0MnKIhV2gSuPeQW6BThjAvMtZglPog2Y",
+    authDomain: "sgk-student.firebaseapp.com",
+    databaseURL: "https://sgk-student-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "sgk-student",
+    storageBucket: "sgk-student.firebasestorage.app",
+    messagingSenderId: "947449761763",
+    appId: "1:947449761763:web:bbdaaaf605cfa0a68e1ad6"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  const TAG_LABELS = { event:'イベント', report:'報告', notice:'お知らせ' };
+
+  // URLから記事IDを取得
+  const params = new URLSearchParams(location.search);
+  const newsId = params.get('id');
+
+  const wrap = document.getElementById('articleWrap');
+
+  if (!newsId) {
+    showError('記事が見つかりません');
+  } else {
+    // 対象記事を取得
+    get(ref(db, 'news/' + newsId)).then(snap => {
+      if (!snap.exists()) { showError('この記事は存在しないか、削除されました'); return; }
+      const n = snap.val();
+
+      // ページタイトル更新
+      document.title = `${n.title || 'お知らせ'} — 志學館生徒会`;
+
+      // 前後の記事取得
+      get(ref(db, 'news')).then(allSnap => {
+        let all = [];
+        allSnap.forEach(c => all.push({ id: c.key, ...c.val() }));
+        all.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        const idx  = all.findIndex(x => x.id === newsId);
+        const prev = idx > 0 ? all[idx - 1] : null;
+        const next = idx < all.length - 1 ? all[idx + 1] : null;
+
+        renderArticle(n, prev, next);
+      });
+    }).catch(() => showError('読み込みに失敗しました'));
+  }
+
+  function renderArticle(n, prev, next) {
+    const tagLabel = TAG_LABELS[n.tag] || n.tag || '';
+    wrap.innerHTML = `
+      <nav class="breadcrumb">
+        <a href="school.html">ホーム</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="school.html#news">お知らせ</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>${esc(n.title)}</span>
+      </nav>
+
+      <header class="article-header">
+        <div class="article-meta">
+          <span class="article-date">${esc(n.date || '')}</span>
+          <span class="article-tag ${esc(n.tag)}">${esc(tagLabel)}</span>
+        </div>
+        <h1 class="article-title">${esc(n.title || '')}</h1>
+        <div class="article-divider">
+          <div class="article-divider-diamond"></div>
+          <div class="article-divider-line"></div>
+        </div>
+      </header>
+
+      ${n.imageUrl ? `<img class="article-eyecatch" src="${esc(n.imageUrl)}" alt="${esc(n.title)}" onerror="this.style.display='none'">` : ''}
+
+      <div class="article-body">${n.body ? esc(n.body) : '<div class="article-body-empty">本文はありません</div>'}</div>
+
+      <a class="back-btn" href="school.html" onclick="event.preventDefault();location.replace('school.html#news')">お知らせ一覧へ戻る</a>
+
+      ${(prev || next) ? `
+      <nav class="article-nav">
+        ${prev ? `<a class="article-nav-item prev" href="news.html?id=${prev.id}">
+          <div class="article-nav-label">← 新しい記事</div>
+          <div class="article-nav-title">${esc(prev.title)}</div>
+        </a>` : '<div></div>'}
+        ${next ? `<a class="article-nav-item next" href="news.html?id=${next.id}">
+          <div class="article-nav-label">古い記事 →</div>
+          <div class="article-nav-title">${esc(next.title)}</div>
+        </a>` : '<div></div>'}
+      </nav>` : ''}
+    `;
+  }
+
+  function showError(msg) {
+    wrap.innerHTML = `
+      <div class="error-state">
+        <div class="error-kanji">無</div>
+        <p class="error-msg">${msg}</p>
+        <a class="back-btn" href="school.html" onclick="event.preventDefault();location.replace('school.html#news')">お知らせ一覧へ戻る</a>
+      </div>`;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>意見箱 — 管理ダッシュボード</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f5f2;
+      --bg2: #eeecea;
+      --bg3: #e6e3df;
+      --border: rgba(26,26,46,0.1);
+      --border-accent: rgba(192,57,43,0.35);
+      --text: #1a1a2e;
+      --text-muted: #6b6880;
+      --text-dim: #aaa8b8;
+      --vermillion: #c0392b;
+      --vermillion-glow: rgba(192,57,43,0.1);
+      --gold: #b8860b;
+      --gold-dim: rgba(184,134,11,0.12);
+      --green: #27ae60;
+      --green-dim: rgba(39,174,96,0.1);
+      --amber: #e67e22;
+      --amber-dim: rgba(230,126,34,0.1);
+      --blue: #2980b9;
+      --blue-dim: rgba(41,128,185,0.1);
+      --shadow: rgba(26,26,46,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-kanji {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--vermillion);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15px;
+      color: var(--vermillion);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      line-height: 1.4;
+    }
+
+    .logo-sub {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 20px 0;
+    }
+
+    .nav-section {
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: var(--text-dim);
+      padding: 8px 12px 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      user-select: none;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: var(--vermillion-glow);
+      border-color: var(--border-accent);
+      color: var(--text);
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--vermillion);
+      color: white;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      margin-right: 6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Main ── */
+    .main {
+      margin-left: 220px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      background: rgba(13,13,20,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+    }
+
+    .topbar-breadcrumb {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .topbar-breadcrumb span { color: var(--vermillion); }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      gap: 8px;
+      width: 220px;
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 12px;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .search-box input::placeholder { color: var(--text-dim); }
+
+    .search-icon { color: var(--text-dim); font-size: 13px; }
+
+    .topbar-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .topbar-btn:hover {
+      border-color: var(--vermillion);
+      color: var(--text);
+    }
+
+    /* Content */
+    .content {
+      padding: 28px;
+      flex: 1;
+    }
+
+    /* ── View panels ── */
+    .view { display: none; }
+    .view.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .stat-card.red::before { background: var(--vermillion); }
+    .stat-card.gold::before { background: var(--gold); }
+    .stat-card.green::before { background: var(--green); }
+    .stat-card.blue::before { background: var(--blue); }
+
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 32px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card.red .stat-value { color: #e05a4a; }
+    .stat-card.gold .stat-value { color: var(--gold); }
+    .stat-card.green .stat-value { color: var(--green); }
+    .stat-card.blue .stat-value { color: var(--blue); }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    /* Chart + category row */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .chart-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 22px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 13px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+    }
+
+    .card-tag {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      letter-spacing: 0.1em;
+    }
+
+    /* Bar chart */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      height: 100px;
+      padding-bottom: 24px;
+      position: relative;
+    }
+
+    .bar-chart::after {
+      content: '';
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bar {
+      width: 100%;
+      background: linear-gradient(to top, var(--vermillion), rgba(192,57,43,0.4));
+      border-radius: 1px 1px 0 0;
+      transition: opacity 0.2s;
+      cursor: pointer;
+      min-height: 3px;
+    }
+
+    .bar:hover { opacity: 0.7; }
+
+    .bar-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      position: absolute;
+      bottom: 6px;
+    }
+
+    .bar-num {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Category list */
+    .cat-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .cat-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cat-name {
+      font-size: 12px;
+      flex: 1;
+      color: var(--text-muted);
+    }
+
+    .cat-bar-wrap {
+      flex: 2;
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .cat-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 1s ease;
+    }
+
+    .cat-count {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+      width: 24px;
+      text-align: right;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 14px;
+      font-size: 11px;
+      font-family: 'Noto Sans JP', sans-serif;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+    .filter-btn.active { background: var(--vermillion-glow); border-color: var(--border-accent); color: var(--text); }
+
+    .filter-sep { color: var(--border); }
+
+    .sort-select {
+      margin-left: auto;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 10px;
+      font-size: 11px;
+      font-family: 'Noto Sans JP', sans-serif;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Suggestion list */
+    .suggestion-list { display: flex; flex-direction: column; gap: 1px; }
+
+    .suggestion-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 18px 22px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .suggestion-item:hover {
+      background: var(--bg3);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .suggestion-item.selected {
+      border-color: var(--border-accent);
+      background: var(--vermillion-glow);
+    }
+
+    .item-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .status-badge {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.15em;
+      padding: 2px 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .status-badge.new { background: var(--vermillion-glow); color: #e05a4a; border: 1px solid rgba(192,57,43,0.3); }
+    .status-badge.progress { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(243,156,18,0.3); }
+    .status-badge.done { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,204,113,0.25); }
+
+    .item-cat {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .item-date {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .item-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .item-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .item-author {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .item-anon {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    /* Detail panel */
+    .detail-panel {
+      position: fixed;
+      top: 0;
+      right: -480px;
+      width: 460px;
+      bottom: 0;
+      background: var(--bg2);
+      border-left: 1px solid var(--border);
+      z-index: 200;
+      transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-panel.open { right: 0; }
+
+    .detail-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .detail-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .detail-close:hover { border-color: var(--vermillion); color: var(--vermillion); }
+
+    .detail-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 14px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+    }
+
+    .detail-body {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .detail-body::-webkit-scrollbar { width: 4px; }
+    .detail-body::-webkit-scrollbar-track { background: transparent; }
+    .detail-body::-webkit-scrollbar-thumb { background: var(--bg3); }
+
+    .detail-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .meta-item {
+      background: var(--bg3);
+      padding: 12px 14px;
+    }
+
+    .meta-key {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 5px;
+    }
+
+    .meta-val {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .detail-message {
+      background: var(--bg3);
+      border-left: 2px solid var(--vermillion);
+      padding: 16px 18px;
+      font-size: 14px;
+      line-height: 1.9;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    .detail-section-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 12px;
+    }
+
+    .status-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .status-btn {
+      flex: 1;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px;
+      font-size: 11px;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+    }
+
+    .status-btn.new-btn:hover, .status-btn.new-btn.current { background: var(--vermillion-glow); border-color: var(--border-accent); color: #e05a4a; }
+    .status-btn.prog-btn:hover, .status-btn.prog-btn.current { background: var(--amber-dim); border-color: rgba(243,156,18,0.3); color: var(--amber); }
+    .status-btn.done-btn:hover, .status-btn.done-btn.current { background: var(--green-dim); border-color: rgba(46,204,113,0.25); color: var(--green); }
+
+    .note-area {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 90px;
+      outline: none;
+      margin-bottom: 12px;
+      line-height: 1.7;
+      transition: border-color 0.2s;
+    }
+
+    .note-area:focus { border-color: var(--vermillion); }
+
+    .save-btn {
+      width: 100%;
+      background: var(--vermillion);
+      border: none;
+      color: white;
+      padding: 10px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover { opacity: 0.85; }
+
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .overlay.show { opacity: 1; pointer-events: all; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+    }
+
+    .empty-kanji {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 48px;
+      font-weight: 300;
+      opacity: 0.2;
+      margin-bottom: 16px;
+    }
+
+    .empty-text { font-size: 13px; letter-spacing: 0.1em; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .charts-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .detail-panel { width: 100%; }
+    }
+    /* ── パスワード画面 ── */
+    .lock-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0;
+    }
+    .lock-screen.hidden { display: none; }
+
+    .lock-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 48px 52px;
+      width: 100%; max-width: 360px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: lockFadeUp 0.5s ease both;
+    }
+    .lock-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--vermillion), transparent);
+    }
+    .lock-icon {
+      width: 48px; height: 48px; border: 1px solid var(--border-accent);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px; font-size: 20px;
+    }
+    .lock-title {
+      font-family: 'Noto Serif JP', serif; font-size: 18px; font-weight: 300;
+      letter-spacing: 0.2em; color: var(--text); text-align: center; margin-bottom: 6px;
+    }
+    .lock-sub {
+      font-size: 11px; letter-spacing: 0.15em; color: var(--text-dim);
+      text-align: center; margin-bottom: 32px;
+    }
+    .lock-input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border);
+      border-bottom: 1px solid rgba(192,57,43,0.3);
+      padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 18px;
+      letter-spacing: 0.3em; color: var(--text); outline: none; text-align: center;
+      transition: border-color 0.2s; margin-bottom: 16px;
+    }
+    .lock-input:focus { border-bottom-color: var(--vermillion); }
+    .lock-input.error { border-color: var(--vermillion); animation: lockShake 0.3s ease; }
+    .lock-btn {
+      width: 100%; padding: 13px; background: var(--vermillion); color: white;
+      border: none; font-family: 'Noto Serif JP', serif; font-size: 14px;
+      letter-spacing: 0.25em; cursor: pointer; transition: opacity 0.2s;
+    }
+    .lock-btn:hover { opacity: 0.85; }
+    .lock-error {
+      font-size: 11px; color: var(--vermillion); text-align: center;
+      margin-top: 12px; letter-spacing: 0.1em; min-height: 16px;
+    }
+    @keyframes lockFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes lockShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  </style>
+</head>
+<body>
+
+
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-kanji">管</div>
+      <div>
+        <div class="logo-text">意見箱</div>
+        <div class="logo-sub">ADMIN PANEL</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">MAIN</div>
+      <div class="nav-item active" data-action="switchView" data-view="dashboard">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="6" height="6"/><rect x="9" y="1" width="6" height="6"/><rect x="1" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/>
+        </svg>
+        ダッシュボード
+      </div>
+      <div class="nav-item" data-action="switchView" data-view="suggestions">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 2h12v10H2zM5 14h6"/>
+        </svg>
+        すべての意見
+        <span class="nav-badge" id="navBadge">3</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">SETTINGS</div>
+      <div class="nav-item" data-action="switchView" data-view="settings">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.42 1.42M11.53 11.53l1.42 1.42M3.05 12.95l1.42-1.42M11.53 4.47l1.42-1.42"/>
+        </svg>
+        カテゴリー設定
+      </div>
+      <div class="nav-item" data-action="switchView" data-view="faq">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="6" r="3"/><path d="M8 10v1M8 12v1"/>
+        </svg>
+        FAQ・Q&A管理
+      </div>
+      <div class="nav-item" data-action="switchView" data-view="site">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="2" width="14" height="11" rx="1"/><path d="M1 5h14M5 2v3"/>
+        </svg>
+        サイト管理
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">STATUS</div>
+      <div class="nav-item" data-action="filterByStatus" data-status="new">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/>
+        </svg>
+        未対応
+      </div>
+      <div class="nav-item" data-action="filterByStatus" data-status="progress">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 8h3l2-5 2 10 2-5h3"/>
+        </svg>
+        対応中
+      </div>
+      <div class="nav-item" data-action="filterByStatus" data-status="done">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6"/><polyline points="5 8 7 10 11 6"/>
+        </svg>
+        完了
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>システム稼働中
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-title">管理ダッシュボード</div>
+    </div>
+    <div class="topbar-breadcrumb">意見箱 <span>/</span> <span id="breadcrumbPage">overview</span></div>
+    <div class="topbar-right">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="意見を検索..." id="searchInput" oninput="handleSearch()">
+      </div>
+      <button class="topbar-btn" data-action="refreshData">🔄 更新</button>
+      <button class="topbar-btn" data-action="exportCSV">CSV 出力</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ── Dashboard view ── -->
+    <div class="view active" id="view-dashboard">
+
+      <div class="stats-row">
+        <div class="stat-card red">
+          <div class="stat-label">TOTAL RECEIVED</div>
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-sub">受信件数（合計）</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-label">PENDING</div>
+          <div class="stat-value" id="statNew">0</div>
+          <div class="stat-sub">未対応件数</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">IN PROGRESS</div>
+          <div class="stat-value" id="statProgress">0</div>
+          <div class="stat-sub">対応中</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">COMPLETED</div>
+          <div class="stat-value" id="statDone">0</div>
+          <div class="stat-sub">完了件数</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">月別受信数</div>
+            <div class="card-tag">TREND / 6MO</div>
+          </div>
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">カテゴリー別</div>
+            <div class="card-tag">BREAKDOWN</div>
+          </div>
+          <div class="cat-list" id="catList"></div>
+        </div>
+      </div>
+
+      <!-- Recent -->
+      <div class="chart-card" style="margin-bottom:0">
+        <div class="card-header">
+          <div class="card-title">最新の意見</div>
+          <div class="card-tag" style="cursor:pointer" data-action="switchView" data-view="suggestions" data-nav="1">すべて表示 →</div>
+        </div>
+        <div class="suggestion-list" id="recentList"></div>
+      </div>
+    </div>
+
+    <!-- ── Suggestions view ── -->
+    <div class="view" id="view-suggestions">
+      <div class="filter-bar" id="filterBar">
+        <button class="filter-btn active" data-action="setFilter" data-filter="all">すべて</button>
+        <button class="filter-btn" data-action="setFilter" data-filter="new">未対応</button>
+        <button class="filter-btn" data-action="setFilter" data-filter="progress">対応中</button>
+        <button class="filter-btn" data-action="setFilter" data-filter="done">完了</button>
+        <span class="filter-sep">|</span>
+        <div id="catFilterBtns"></div>
+        <select class="sort-select" onchange="handleSort(this.value)">
+          <option value="newest">新しい順</option>
+          <option value="oldest">古い順</option>
+        </select>
+      </div>
+      <div class="suggestion-list" id="fullList"></div>
+    </div>
+
+    <!-- ── Settings view ── -->
+    <div class="view" id="view-settings">
+      <div class="chart-card" style="max-width:600px">
+        <div class="card-header">
+          <div class="card-title">カテゴリー管理</div>
+          <div class="card-tag">EDITABLE</div>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.8">カテゴリーの追加・削除・並び替えができます。変更はフィルターや統計グラフにも即時反映されます。</p>
+        <div id="catEditList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+        <div style="display:flex;gap:10px">
+          <input type="text" id="newCatInput" placeholder="新しいカテゴリー名を入力..." style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 14px;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')addCategory()">
+          <button data-action="addCategory" style="background:var(--vermillion);border:none;color:white;padding:9px 20px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">追 加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FAQ view ── -->
+    <div class="view" id="view-faq">
+      <div style="display:flex;flex-direction:column;gap:20px;max-width:680px">
+
+        <!-- 生徒会Q&A（複数管理） -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">生徒会Q&A</div>
+            <div class="card-tag">WEEKLY</div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">複数の質問と回答を追加できます。生徒向けサイトに全件表示されます。</p>
+          <div id="weeklyEditList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+          <div style="background:var(--bg3);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div class="detail-section-label">新しいQ&Aを追加</div>
+            <textarea id="newWeeklyQ" placeholder="質問を入力..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;resize:vertical;min-height:60px;outline:none;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <textarea id="newWeeklyA" placeholder="回答を入力..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;resize:vertical;min-height:80px;outline:none;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <button data-action="addWeekly" style="background:var(--vermillion);border:none;color:white;padding:9px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">追 加</button>
+          </div>
+        </div>
+
+        <!-- FAQ一覧 -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">よくある質問</div>
+            <div class="card-tag">FAQ</div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">質問と回答を追加・削除できます。カテゴリー別に整理されfaq.htmlに表示されます。</p>
+
+          <div id="faqEditList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+
+          <!-- 新規追加フォーム -->
+          <div style="background:var(--bg3);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div class="detail-section-label">新しいFAQを追加</div>
+            <input type="text" id="newFaqCat" placeholder="カテゴリー（例：校則について）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            <input type="text" id="newFaqQ" placeholder="質問を入力..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            <textarea id="newFaqA" placeholder="回答を入力..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;resize:vertical;min-height:70px;outline:none;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <button data-action="addFaq" style="background:var(--vermillion);border:none;color:white;padding:9px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">追 加</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Site管理 view ── -->
+    <div class="view" id="view-site">
+      <div style="display:flex;flex-direction:column;gap:20px;max-width:680px">
+
+        <!-- サイト設定 -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">トップページ設定</div>
+            <div class="card-tag">HERO</div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">ヒーローセクションのテキストを変更できます。</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:6px">キャッチコピー（※で強調文字）</div>
+              <input type="text" id="settingCatch" placeholder="例：学校を、みんなの※手※で。" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;width:100%" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+              <div style="font-size:10px;color:var(--text-dim);margin-top:4px">※テキスト※ で朱色の強調になります（例：声が、※学校※を動かす力になる。）</div>
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:6px">サブテキスト</div>
+              <textarea id="settingSub" rows="3" placeholder="例：志學館生徒会は、あなたの小さな一声を..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;width:100%;resize:vertical;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:6px">背景の漢字（左・右）</div>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="settingKanji1" maxlength="1" placeholder="志" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Shippori Mincho',serif;font-size:20px;outline:none;width:80px;text-align:center" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+                <input type="text" id="settingKanji2" maxlength="1" placeholder="声" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Shippori Mincho',serif;font-size:20px;outline:none;width:80px;text-align:center" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+              </div>
+            </div>
+            <button onclick="saveHeroSettings()" style="background:var(--vermillion);border:none;color:white;padding:9px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">保 存</button>
+          </div>
+        </div>
+
+        <!-- お知らせ管理 -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">お知らせ管理</div>
+            <div class="card-tag">NEWS</div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">生徒会サイトのお知らせ欄を管理します。</p>
+          <div id="newsEditList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+          <div style="background:var(--bg3);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div class="detail-section-label">新しいお知らせを追加</div>
+            <div style="display:flex;gap:10px">
+              <input type="date" id="newNewsDate" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;flex:1" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+              <select id="newNewsTag" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+                <option value="notice">お知らせ</option>
+                <option value="event">イベント</option>
+                <option value="report">報告</option>
+              </select>
+            </div>
+            <input type="text" id="newNewsTitle" placeholder="タイトルを入力..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            <textarea id="newNewsBody" placeholder="詳細本文（任意）..." rows="4" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;resize:vertical;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <div>
+              <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:8px">画像（任意）</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="file" id="newNewsImageFile" accept="image/*" style="display:none" onchange="previewNewsImage(this)">
+                <button type="button" onclick="document.getElementById('newNewsImageFile').click()" style="background:var(--bg);border:1px solid var(--border);color:var(--text-muted);padding:8px 16px;font-family:'Noto Sans JP',sans-serif;font-size:12px;cursor:pointer;transition:border-color 0.2s;letter-spacing:0.1em" onmouseover="this.style.borderColor='var(--vermillion)'" onmouseout="this.style.borderColor='var(--border)'">📷 画像を選択</button>
+                <span id="newNewsImageName" style="font-size:11px;color:var(--text-dim)">未選択</span>
+                <button type="button" id="newNewsImageClear" onclick="clearNewsImage()" style="display:none;background:none;border:none;color:#e05a4a;cursor:pointer;font-size:12px">✕</button>
+              </div>
+              <div id="newNewsImagePreview" style="margin-top:10px;display:none">
+                <img id="newNewsImageThumb" style="max-height:140px;border:1px solid var(--border);object-fit:cover;display:block" alt="プレビュー">
+                <div id="newNewsUploadStatus" style="font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:0.1em"></div>
+              </div>
+              <input type="hidden" id="newNewsImage">
+            </div>
+            <button data-action="addNews" style="background:var(--vermillion);border:none;color:white;padding:9px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">追 加</button>
+          </div>
+        </div>
+
+        <!-- イベント管理 -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">年間イベント管理</div>
+            <div class="card-tag">EVENTS</div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">生徒会サイトの年間イベント欄を管理します。</p>
+          <div id="eventsEditList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+          <div style="background:var(--bg3);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div class="detail-section-label">新しいイベントを追加</div>
+            <div style="display:flex;gap:10px">
+              <input type="text" id="newEventMonth" placeholder="月（例：JUNE）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;flex:1" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+              <input type="text" id="newEventTitle" placeholder="イベント名" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;flex:2" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <textarea id="newEventDesc" placeholder="説明文..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;resize:vertical;min-height:60px;outline:none;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <input type="text" id="newEventDateLabel" placeholder="日程ラベル（例：2025年6月中旬予定）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            <button data-action="addEvent" style="background:var(--vermillion);border:none;color:white;padding:9px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">追 加</button>
+          </div>
+        </div>
+
+        <!-- カウントダウン管理 -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">カウントダウン管理</div>
+            <div class="card-tag">COUNTDOWN</div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">生徒会サイトのカウントダウンを設定します。</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div>
+              <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:6px">イベント名</div>
+              <input type="text" id="cdName" placeholder="例：文化祭" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:13px;outline:none;width:100%" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:6px">開催日時</div>
+              <input type="datetime-local" id="cdDate" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;width:100%" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);cursor:pointer">
+              <input type="checkbox" id="cdActive" style="accent-color:var(--vermillion);width:15px;height:15px">
+              カウントダウンを表示する
+            </label>
+            <button onclick="saveCountdown()" style="background:var(--vermillion);border:none;color:white;padding:9px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">保 存</button>
+          </div>
+        </div>
+
+        <!-- アンケート管理 -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div class="card-title">アンケート管理</div>
+            <div class="card-tag">SURVEY</div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">複数のアンケートを作成・管理できます。</p>
+
+          <!-- アンケート一覧 -->
+          <div id="surveysEditList" style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px"></div>
+
+          <!-- 新規作成 -->
+          <div style="background:var(--bg3);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div class="detail-section-label">新しいアンケートを作成</div>
+            <input type="text" id="newSurveyTitle" placeholder="アンケートタイトル（例：文化祭について）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;width:100%" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            <div id="newSurveyQuestions" style="display:flex;flex-direction:column;gap:8px"></div>
+            <button onclick="addQuestionField()" style="background:none;border:1px dashed var(--border);color:var(--text-muted);padding:8px;font-family:'Noto Sans JP',sans-serif;font-size:12px;cursor:pointer;letter-spacing:0.1em" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">＋ 質問を追加</button>
+            <button onclick="createSurvey()" style="background:var(--vermillion);border:none;color:white;padding:9px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">作 成</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+<!-- Detail panel overlay -->
+<div class="overlay" id="overlay" data-action="closeDetail"></div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <button class="detail-close" data-action="closeDetail">✕</button>
+    <div class="detail-title">意見詳細</div>
+    <div style="margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-dim)" id="detailId"></div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-meta" id="detailMeta"></div>
+    <div class="detail-section-label">CONTENT</div>
+    <div class="detail-message" id="detailMessage"></div>
+    <div class="detail-section-label">ステータス変更</div>
+    <div class="status-actions">
+      <button class="status-btn new-btn" data-action="changeStatus" data-status="new">未対応</button>
+      <button class="status-btn prog-btn" data-action="changeStatus" data-status="progress">対応中</button>
+      <button class="status-btn done-btn" data-action="changeStatus" data-status="done">完了</button>
+    </div>
+    <div class="detail-section-label">生徒会Q&Aに追加</div>
+    <div style="margin-bottom:20px">
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:10px;line-height:1.7">この意見を生徒会Q&Aとして掲載します。回答を入力してください。</p>
+      <textarea id="weeklyAnswerInput" placeholder="この質問への回答を入力..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;font-family:'Noto Sans JP',sans-serif;font-size:13px;resize:vertical;min-height:80px;outline:none;line-height:1.7;margin-bottom:8px" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <button data-action="setAsWeekly" style="width:100%;background:var(--gold);border:none;color:white;padding:10px;font-family:'Noto Sans JP',sans-serif;font-size:13px;letter-spacing:0.15em;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">⭐ 生徒会Q&Aに追加する</button>
+    </div>
+    <div class="detail-section-label">メモ・対応記録</div>
+    <textarea class="note-area" id="noteArea" placeholder="対応内容や備考をここに記入..."></textarea>
+    <button class="save-btn" data-action="saveNote">保 存 す る</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, update, set, push, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA0MnKIhV2gSuPeQW6BThjAvMtZglPog2Y",
+  authDomain: "sgk-student.firebaseapp.com",
+  databaseURL: "https://sgk-student-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "sgk-student",
+  storageBucket: "sgk-student.firebasestorage.app",
+  messagingSenderId: "947449761763",
+  appId: "1:947449761763:web:bbdaaaf605cfa0a68e1ad6"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// Firebase関数をグローバルに公開
+window._fbRef    = ref;
+window._fbDb     = db;
+window._fbOnValue  = onValue;
+window._fbUpdate = update;
+window._fbSet    = set;
+window._fbPush   = push;
+window._fbRemove = remove;
+
+// Firebase準備完了を通知
+window.dispatchEvent(new Event('firebase-ready'));
+</script>
+<script>
+
+
+// ── データ ──
+let suggestions = [];
+
+const monthData = [
+  { month: '10月', count: 0 },
+  { month: '11月', count: 0 },
+  { month: '12月', count: 0 },
+  { month: '1月', count: 0 },
+  { month: '2月', count: 0 },
+  { month: '3月', count: 0 }
+];
+
+const defaultCategories = [
+  '学校生活について',
+  '校舎・設備について',
+  '食堂について',
+  '学校行事・イベントについて',
+  '校内ルールについて',
+  '部活動・同好会について',
+  '勉強・授業について',
+  'その他'
+];
+
+let categories = [...defaultCategories];
+const palette = ['#5b8dee','#c0392b','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#7a7890','#e91e8c','#00bcd4'];
+
+function getCatColor(cat) {
+  const idx = categories.indexOf(cat);
+  return palette[idx % palette.length] || '#7a7890';
+}
+
+// ── Firebaseからリアルタイム読み込み ──
+function loadFromSheet() {
+  _fbOnValue(_fbRef(_fbDb, 'suggestions'), snap => {
+    suggestions = [];
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const d = child.val();
+        suggestions.push({
+          id: child.key,
+          category: d.category || '',
+          otherCategory: d.otherCategory || '',
+          name: d.name || '',
+          grade: d.grade || '',
+          classNum: d.classNum || '',
+          anonymous: d.anonymous || false,
+          message: d.message || '',
+          status: d.status === '対応中' ? 'progress' : d.status === '完了' ? 'done' : (d.status || 'new'),
+          date: d.createdAt ? d.createdAt.slice(0, 10) : '',
+          note: d.memo || ''
+        });
+      });
+      suggestions.sort((a, b) => b.date.localeCompare(a.date));
+    }
+    buildMonthData();
+    renderAll();
+  });
+}
+
+function statusToKey(label) {
+  if (label === '対応中') return 'progress';
+  if (label === '完了') return 'done';
+  return 'new';
+}
+
+function statusToLabel(key) {
+  if (key === 'progress') return '対応中';
+  if (key === 'done') return '完了';
+  return '未対応';
+}
+
+function buildMonthData() {
+  const counts = {};
+  suggestions.forEach(s => {
+    const m = s.date ? s.date.slice(5, 7) + '月' : '';
+    if (m) counts[m] = (counts[m] || 0) + 1;
+  });
+  monthData.forEach(d => d.count = counts[d.month] || 0);
+}
+
+function loadSampleData() {
+  suggestions = [
+    { id:'SB-001', category:'学校生活について', name:'田中 美咲', grade:'2', classNum:'3', anonymous:false, message:'朝のホームルームの時間が短くてバタバタしています。もう少し余裕を持てるようにしてほしいです。', status:'new', date:'2026-03-07', note:'' },
+    { id:'SB-002', category:'校舎・設備について', name:'匿名', grade:'', classNum:'', anonymous:true, message:'図書室のイスが古くて座りにくいです。新しいものに替えてもらえたら嬉しいです。', status:'progress', date:'2026-03-05', note:'施設担当の先生に共有済み。予算確認中。' },
+    { id:'SB-003', category:'食堂について', name:'佐藤 健二', grade:'3', classNum:'1', anonymous:false, message:'食堂のカレーがとても美味しいです！週に2回くらい出してほしいです。', status:'done', date:'2026-03-02', note:'食堂担当に伝達済み。次月から週2回提供予定。' },
+    { id:'SB-004', category:'校内ルールについて', name:'鈴木 花子', grade:'1', classNum:'2', anonymous:false, message:'体操服で登下校するのを禁止しているルールの理由がわかりません。理由を教えてほしいです。', status:'new', date:'2026-03-06', note:'' },
+    { id:'SB-005', category:'部活動・同好会について', name:'匿名', grade:'', classNum:'', anonymous:true, message:'吹奏楽部の練習場所が狭くて困っています。音楽室を複数使えるようにしてもらえませんか。', status:'new', date:'2026-03-08', note:'' },
+    { id:'SB-006', category:'学校行事・イベントについて', name:'山本 隆', grade:'2', classNum:'4', anonymous:false, message:'文化祭でクラス対抗のゲーム大会をやってみたいです。生徒会で企画してもらえませんか！', status:'done', date:'2026-02-28', note:'' }
+  ];
+  buildMonthData();
+  renderAll();
+}
+
+// ── Firebase にステータス・メモを更新 ──
+async function pushUpdate(id, fields) {
+  try {
+    const mapped = {};
+    if (fields.status !== undefined) mapped.status = statusToLabel(fields.status);
+    if (fields.note  !== undefined) mapped.memo   = fields.note;
+    await _fbUpdate(_fbRef(_fbDb, 'suggestions/' + id), mapped);
+  } catch (err) { console.warn('更新エラー:', err); }
+}
+
+// ── Init ──
+function init() {
+  renderCatFilterBtns();
+  renderCatEditList();
+  loadFromSheet();
+}
+
+function renderAll() {
+  renderStats();
+  renderBarChart();
+  renderCategoryChart();
+  renderRecentList();
+  renderFullList();
+  updateNavBadge();
+}
+
+function updateNavBadge() {
+  const newCount = suggestions.filter(s => s.status === 'new').length;
+  const badge = document.getElementById('navBadge');
+  badge.textContent = newCount;
+  badge.style.display = newCount === 0 ? 'none' : '';
+}
+
+function renderStats() {
+  document.getElementById('statTotal').textContent = suggestions.length;
+  document.getElementById('statNew').textContent = suggestions.filter(s => s.status === 'new').length;
+  document.getElementById('statProgress').textContent = suggestions.filter(s => s.status === 'progress').length;
+  document.getElementById('statDone').textContent = suggestions.filter(s => s.status === 'done').length;
+}
+
+function renderBarChart() {
+  const max = Math.max(...monthData.map(d => d.count), 1);
+  const container = document.getElementById('barChart');
+  container.innerHTML = monthData.map(d => `
+    <div class="bar-col">
+      <div class="bar-num">${d.count}</div>
+      <div class="bar" style="height:${(d.count / max) * 70}px" title="${d.month}: ${d.count}件"></div>
+      <div style="font-size:9px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-top:4px">${d.month}</div>
+    </div>
+  `).join('');
+}
+
+function renderCategoryChart() {
+  const cats = {};
+  suggestions.forEach(s => { cats[s.category] = (cats[s.category] || 0) + 1; });
+  const sorted = Object.entries(cats).sort((a,b) => b[1]-a[1]);
+  const max = sorted[0]?.[1] || 1;
+  document.getElementById('catList').innerHTML = sorted.map(([cat, count]) => `
+    <div class="cat-item">
+      <div class="cat-dot" style="background:${getCatColor(cat)}"></div>
+      <div class="cat-name">${cat}</div>
+      <div class="cat-bar-wrap">
+        <div class="cat-bar-fill" style="width:${(count/max)*100}%;background:${getCatColor(cat)}"></div>
+      </div>
+      <div class="cat-count">${count}</div>
+    </div>
+  `).join('');
+}
+
+function renderRecentList() {
+  const recent = [...suggestions].sort((a,b) => b.date.localeCompare(a.date)).slice(0,3);
+  document.getElementById('recentList').innerHTML = recent.map(s => renderItem(s)).join('');
+}
+
+let currentFilter = 'all';
+let currentSort = 'newest';
+let selectedId = null;
+let searchQuery = '';
+
+function getFiltered() {
+  let list = [...suggestions];
+  if (['new','progress','done'].includes(currentFilter)) {
+    list = list.filter(s => s.status === currentFilter);
+  } else if (currentFilter !== 'all') {
+    list = list.filter(s => s.category.includes(currentFilter));
+  }
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(s =>
+      s.message.toLowerCase().includes(q) ||
+      s.category.toLowerCase().includes(q) ||
+      (s.name && s.name.toLowerCase().includes(q))
+    );
+  }
+  if (currentSort === 'newest') list.sort((a,b) => b.date.localeCompare(a.date));
+  else list.sort((a,b) => a.date.localeCompare(b.date));
+  return list;
+}
+
+function renderFullList() {
+  const list = getFiltered();
+  const container = document.getElementById('fullList');
+  if (list.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-kanji">無</div><div class="empty-text">該当する意見がありません</div></div>`;
+    return;
+  }
+  container.innerHTML = list.map(s => renderItem(s)).join('');
+}
+
+function renderItem(s) {
+  const statusLabel = { new:'未対応', progress:'対応中', done:'完了' }[s.status];
+  const authorStr = s.anonymous
+    ? '<span class="item-anon">匿名</span>'
+    : `<span class="item-author">${s.name || '—'}${s.grade ? '　' + s.grade + '年' + s.classNum + '組' : ''}</span>`;
+  return `
+    <div class="suggestion-item${selectedId === s.id ? ' selected' : ''}" onclick="openDetail('${s.id}')">
+      <div class="item-top">
+        <span class="status-badge ${s.status}">${statusLabel}</span>
+        <span class="item-cat">${s.category}</span>
+        <span class="item-date">${s.date}</span>
+        <button onclick="event.stopPropagation();deleteSuggestion('${s.id}')" style="margin-left:auto;background:none;border:1px solid rgba(192,57,43,0.25);color:#c0392b;font-size:10px;padding:2px 8px;cursor:pointer;letter-spacing:0.05em;transition:background 0.2s" onmouseover="this.style.background='rgba(192,57,43,0.1)'" onmouseout="this.style.background='none'">削除</button>
+      </div>
+      <div class="item-text">${s.message}</div>
+      <div class="item-footer">
+        <span style="font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace">${s.id}</span>
+        ${authorStr}
+        ${s.note ? '<span style="margin-left:auto;font-size:10px;color:var(--text-dim)">📝 メモあり</span>' : ''}
+      </div>
+    </div>`;
+}
+
+function openDetail(id) {
+  selectedId = id;
+  const s = suggestions.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById('detailId').textContent = s.id;
+  document.getElementById('detailMessage').textContent = s.message;
+  document.getElementById('noteArea').value = s.note || '';
+
+  document.getElementById('detailMeta').innerHTML = `
+    <div class="meta-item"><div class="meta-key">CATEGORY</div><div class="meta-val">${s.category}</div></div>
+    <div class="meta-item"><div class="meta-key">DATE</div><div class="meta-val">${s.date}</div></div>
+    <div class="meta-item"><div class="meta-key">NAME</div><div class="meta-val">${s.anonymous ? '匿名' : (s.name || '未入力')}</div></div>
+    <div class="meta-item"><div class="meta-key">学年・クラス</div><div class="meta-val">${s.anonymous ? '—' : (s.grade ? s.grade + '年 ' + s.classNum + '組' : '—')}</div></div>
+  `;
+
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('current'));
+  const map = { new:'new-btn', progress:'prog-btn', done:'done-btn' };
+  document.querySelector('.' + map[s.status])?.classList.add('current');
+
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+
+  renderFullList();
+  renderRecentList();
+}
+
+function closeDetail() {
+  selectedId = null;
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+  renderFullList();
+  renderRecentList();
+}
+
+function changeStatus(status) {
+  if (!selectedId) return;
+  const s = suggestions.find(x => x.id === selectedId);
+  if (s) {
+    s.status = status;
+    pushUpdate(s.id, { status: statusToLabel(status) });
+    document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('current'));
+    const map = { new:'new-btn', progress:'prog-btn', done:'done-btn' };
+    document.querySelector('.' + map[status])?.classList.add('current');
+    renderStats(); renderCategoryChart(); renderFullList(); renderRecentList(); updateNavBadge();
+  }
+}
+
+function saveNote() {
+  if (!selectedId) return;
+  const s = suggestions.find(x => x.id === selectedId);
+  if (s) {
+    s.note = document.getElementById('noteArea').value;
+    pushUpdate(s.id, { note: s.note });
+    const btn = document.querySelector('.save-btn');
+    btn.textContent = '保 存 し ま し た ✓';
+    btn.style.background = 'var(--green)';
+    setTimeout(() => { btn.textContent = '保 存 す る'; btn.style.background = 'var(--vermillion)'; }, 1800);
+    renderFullList(); renderRecentList();
+  }
+}
+
+function setFilter(val, btn) {
+  currentFilter = val;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFullList();
+}
+
+function handleSort(val) { currentSort = val; renderFullList(); }
+
+function handleSearch() {
+  searchQuery = document.getElementById('searchInput').value;
+  if (document.getElementById('view-suggestions').classList.contains('active')) renderFullList();
+}
+
+function switchView(view, navEl) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('breadcrumbPage').textContent = view;
+  if (view === 'suggestions') renderFullList();
+  if (view === 'settings') renderCatEditList();
+  if (view === 'faq') loadFaqView();
+  if (view === 'site') loadSiteView();
+}
+
+function filterByStatus(status, navEl) {
+  currentFilter = status;
+  switchView('suggestions', navEl);
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === { new:'未対応', progress:'対応中', done:'完了' }[status]);
+  });
+  renderFullList();
+}
+
+function renderCatFilterBtns() {
+  const container = document.getElementById('catFilterBtns');
+  container.style.display = 'flex';
+  container.style.gap = '8px';
+  container.style.flexWrap = 'wrap';
+  container.innerHTML = categories.map(cat => {
+    const short = cat.replace('について','').replace('・','/');
+    return `<button class="filter-btn" onclick="setFilter('${cat}', this)">${short}</button>`;
+  }).join('');
+}
+
+function renderCatEditList() {
+  const container = document.getElementById('catEditList');
+  container.innerHTML = categories.map((cat, i) => `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--bg3);padding:10px 14px;border:1px solid var(--border)">
+      <div style="width:10px;height:10px;border-radius:50%;background:${getCatColor(cat)};flex-shrink:0"></div>
+      <span style="flex:1;font-size:13px;color:var(--text-muted)">${cat}</span>
+      <div style="display:flex;gap:6px">
+        <button onclick="moveCat(${i},-1)" style="background:none;border:1px solid var(--border);color:var(--text-dim);width:26px;height:26px;cursor:pointer;font-size:11px" ${i===0?'disabled':''}>↑</button>
+        <button onclick="moveCat(${i},1)" style="background:none;border:1px solid var(--border);color:var(--text-dim);width:26px;height:26px;cursor:pointer;font-size:11px" ${i===categories.length-1?'disabled':''}>↓</button>
+        <button onclick="deleteCat(${i})" style="background:none;border:1px solid rgba(192,57,43,0.3);color:#e05a4a;width:26px;height:26px;cursor:pointer;font-size:13px">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addCategory() {
+  const input = document.getElementById('newCatInput');
+  const val = input.value.trim();
+  if (!val || categories.includes(val)) return;
+  categories.push(val);
+  input.value = '';
+  refreshCategoryUI();
+}
+
+function deleteCat(i) {
+  if (categories.length <= 1) return;
+  categories.splice(i, 1);
+  refreshCategoryUI();
+}
+
+function moveCat(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= categories.length) return;
+  [categories[i], categories[j]] = [categories[j], categories[i]];
+  refreshCategoryUI();
+}
+
+function refreshCategoryUI() {
+  renderCatEditList();
+  renderCatFilterBtns();
+  renderCategoryChart();
+}
+
+function exportCSV() {
+  const header = ['ID', 'カテゴリー', 'お名前', '学年', 'クラス', '内容', 'ステータス', '日付', 'メモ'];
+  const rows = suggestions.map(s => [
+    s.id, s.category,
+    s.anonymous ? '匿名' : (s.name || ''),
+    s.anonymous ? '' : (s.grade || ''),
+    s.anonymous ? '' : (s.classNum || ''),
+    '"' + s.message.replace(/"/g, '""') + '"',
+    { new:'未対応', progress:'対応中', done:'完了' }[s.status],
+    s.date,
+    '"' + (s.note || '').replace(/"/g, '""') + '"'
+  ]);
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = '意見箱_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// 更新ボタン（トップバー）
+function refreshData() {
+  const btn = document.querySelector('.topbar-btn[data-action="refreshData"]');
+  if (btn) { btn.textContent = '読込中...'; btn.disabled = true; }
+  loadFromSheet().finally(() => {
+    if (btn) { btn.textContent = '🔄 更新'; btn.disabled = false; }
+  });
+}
+
+async function setAsWeekly() {
+  if (!selectedId) return;
+  const s = suggestions.find(x => x.id === selectedId);
+  if (!s) return;
+  const answer = document.getElementById('weeklyAnswerInput').value.trim();
+  if (!answer) {
+    document.getElementById('weeklyAnswerInput').style.borderColor = 'var(--vermillion)';
+    setTimeout(() => document.getElementById('weeklyAnswerInput').style.borderColor = 'var(--border)', 1500);
+    return;
+  }
+  const now = new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric' });
+  await _fbPush(_fbRef(_fbDb, 'weeklies'), { question: s.message, answer: answer, date: now, createdAt: new Date().toISOString() });
+  const btn = event.target;
+  btn.textContent = '⭐ 追加しました！';
+  btn.style.background = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = '⭐ 生徒会Q&Aに追加する';
+    btn.style.background = 'var(--gold)';
+  }, 2000);
+}
+
+// ── FAQ管理 ──
+function loadFaqView() {
+  renderWeeklyEditList();
+  renderFaqEditList();
+}
+
+function renderWeeklyEditList() {
+  _fbOnValue(_fbRef(_fbDb, 'weeklies'), snap => {
+    const container = document.getElementById('weeklyEditList');
+    if (!snap.exists()) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:12px 0">まだQ&Aがありません</div>';
+      return;
+    }
+    const items = [];
+    snap.forEach(child => items.push({ id: child.key, ...child.val() }));
+    items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    container.innerHTML = items.map(w => `
+      <div style="background:var(--bg3);border:1px solid var(--border);padding:12px 14px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--text);margin-bottom:4px">Q. ${escapeHtml(w.question)}</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6">A. ${escapeHtml(w.answer)}</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:4px">${w.date || ''}</div>
+          </div>
+          <button onclick="deleteWeekly('${w.id}')" style="background:none;border:1px solid rgba(192,57,43,0.3);color:#e05a4a;width:26px;height:26px;cursor:pointer;font-size:12px;flex-shrink:0" onmouseover="this.style.background='var(--vermillion-glow)'" onmouseout="this.style.background='none'">✕</button>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+
+async function addWeekly() {
+  const q = document.getElementById('newWeeklyQ').value.trim();
+  const a = document.getElementById('newWeeklyA').value.trim();
+  if (!q || !a) return;
+  const now = new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric' });
+  await _fbPush(_fbRef(_fbDb, 'weeklies'), { question: q, answer: a, date: now, createdAt: new Date().toISOString() });
+  document.getElementById('newWeeklyQ').value = '';
+  document.getElementById('newWeeklyA').value = '';
+  renderWeeklyEditList();
+}
+
+async function deleteWeekly(id) {
+  await _fbRemove(_fbRef(_fbDb, 'weeklies/' + id));
+  renderWeeklyEditList();
+}
+
+// (旧saveWeekly互換 - 不使用)
+async function saveWeekly() {}
+
+function renderFaqEditList() {
+  _fbOnValue(_fbRef(_fbDb, 'faqs'), snap => {
+    const container = document.getElementById('faqEditList');
+    if (!snap.exists()) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:12px 0">まだFAQがありません</div>';
+      return;
+    }
+    const faqs = [];
+    snap.forEach(child => faqs.push({ id: child.key, ...child.val() }));
+    container.innerHTML = faqs.map(faq => `
+      <div style="background:var(--bg3);border:1px solid var(--border);padding:12px 14px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:9px;letter-spacing:0.2em;color:var(--text-dim);margin-bottom:4px">${escapeHtml(faq.category || 'その他')}</div>
+            <div style="font-size:13px;color:var(--text);margin-bottom:4px">Q. ${escapeHtml(faq.question)}</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.6">A. ${escapeHtml(faq.answer)}</div>
+          </div>
+          <button onclick="deleteFaq('${faq.id}')" style="background:none;border:1px solid rgba(192,57,43,0.3);color:#e05a4a;width:26px;height:26px;cursor:pointer;font-size:12px;flex-shrink:0" onmouseover="this.style.background='var(--vermillion-glow)'" onmouseout="this.style.background='none'">✕</button>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+
+async function addFaq() {
+  const cat = document.getElementById('newFaqCat').value.trim();
+  const q   = document.getElementById('newFaqQ').value.trim();
+  const a   = document.getElementById('newFaqA').value.trim();
+  if (!q || !a) return;
+  await _fbPush(_fbRef(_fbDb, 'faqs'), { category: cat || 'その他', question: q, answer: a });
+  document.getElementById('newFaqCat').value = '';
+  document.getElementById('newFaqQ').value   = '';
+  document.getElementById('newFaqA').value   = '';
+  renderFaqEditList();
+}
+
+async function deleteFaq(id) {
+  await _fbRemove(_fbRef(_fbDb, 'faqs/' + id));
+  renderFaqEditList();
+}
+
+
+// ── Hero設定 ──
+function loadHeroSettings() {
+  _fbOnValue(_fbRef(_fbDb, 'settings/hero'), snap => {
+    const s = snap.val() || {};
+    document.getElementById('settingCatch').value  = s.catch  || '';
+    document.getElementById('settingSub').value    = s.sub    || '';
+    document.getElementById('settingKanji1').value = s.kanji1 || '';
+    document.getElementById('settingKanji2').value = s.kanji2 || '';
+  });
+}
+
+async function saveHeroSettings() {
+  const catchText = document.getElementById('settingCatch').value.trim();
+  const sub       = document.getElementById('settingSub').value.trim();
+  const kanji1    = document.getElementById('settingKanji1').value.trim();
+  const kanji2    = document.getElementById('settingKanji2').value.trim();
+  await _fbSet(_fbRef(_fbDb, 'settings/hero'), { catch: catchText, sub, kanji1, kanji2 });
+  const btn = event.target;
+  btn.textContent = '✓ 保存しました';
+  setTimeout(() => { btn.textContent = '保 存'; }, 2000);
+}
+
+// ── サイト管理（お知らせ・イベント）──
+function loadSiteView() {
+  loadHeroSettings();
+  renderNewsEditList();
+  renderEventsEditList();
+  loadCountdownSettings();
+  loadSurveySettings();
+}
+
+function renderNewsEditList() {
+  _fbOnValue(_fbRef(_fbDb, 'news'), snap => {
+    const container = document.getElementById('newsEditList');
+    if (!snap.exists()) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:12px 0">まだお知らせがありません</div>';
+      return;
+    }
+    const items = [];
+    snap.forEach(child => items.push({ id: child.key, ...child.val() }));
+    items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    const TAG_LABELS = { event:'イベント', report:'報告', notice:'お知らせ' };
+    container.innerHTML = items.map(n => `
+      <div style="background:var(--bg3);border:1px solid var(--border);overflow:hidden">
+        <div onclick="this.parentElement.classList.toggle('news-open')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:3px">
+              <span style="font-size:10px;color:var(--text-dim);flex-shrink:0">${escapeHtml(n.date || '')}</span>
+              <span style="font-size:9px;letter-spacing:0.15em;padding:2px 8px;border:1px solid var(--vermillion);color:var(--vermillion);flex-shrink:0">${escapeHtml(TAG_LABELS[n.tag] || n.tag || '')}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(n.title || '')}</div>
+          </div>
+          <span style="font-size:10px;color:var(--text-dim);transition:transform 0.25s;flex-shrink:0" class="news-arrow">▼</span>
+          <button onclick="event.stopPropagation();deleteNews('${n.id}')" style="background:none;border:1px solid rgba(192,57,43,0.3);color:#e05a4a;width:26px;height:26px;cursor:pointer;font-size:12px;flex-shrink:0" onmouseover="this.style.background='rgba(192,57,43,0.08)'" onmouseout="this.style.background='none'">✕</button>
+        </div>
+        <div style="max-height:0;overflow:hidden;transition:max-height 0.35s ease" class="news-body-wrap">
+          <div style="padding:0 14px 14px;border-top:1px solid var(--border)">
+            ${n.body ? `<p style="font-size:12px;color:var(--text-muted);line-height:1.9;padding-top:12px;white-space:pre-wrap">${escapeHtml(n.body)}</p>` : '<p style="font-size:12px;color:var(--text-dim);padding-top:12px">詳細本文なし</p>'}
+          </div>
+        </div>
+      </div>`).join('');
+
+    // アコーディオン開閉スタイルをCSS classで制御（inlineで動かす）
+    container.querySelectorAll('[class*="news-open"]').forEach(el => {
+      const wrap = el.querySelector('.news-body-wrap');
+      const arrow = el.querySelector('.news-arrow');
+      if (wrap) wrap.style.maxHeight = el.classList.contains('news-open') ? wrap.scrollHeight + 'px' : '0';
+      if (arrow) arrow.style.transform = el.classList.contains('news-open') ? 'rotate(180deg)' : '';
+    });
+
+    // MutationObserverでクラス変化を検知してアコーディオン動作
+    container.querySelectorAll('div[style*="overflow:hidden"]').forEach(card => {
+      const obs = new MutationObserver(() => {
+        const wrap  = card.querySelector('.news-body-wrap');
+        const arrow = card.querySelector('.news-arrow');
+        const open  = card.classList.contains('news-open');
+        if (wrap)  wrap.style.maxHeight  = open ? wrap.scrollHeight + 'px' : '0';
+        if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+      });
+      obs.observe(card, { attributes: true, attributeFilter: ['class'] });
+    });
+  });
+}
+
+// ── Cloudinary設定 ──
+const CLOUDINARY_CLOUD = 'dzcizbk7g';
+const CLOUDINARY_PRESET = 'm5049eub';
+
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: fd });
+  if (!res.ok) throw new Error('アップロード失敗');
+  const data = await res.json();
+  return data.secure_url;
+}
+
+function previewNewsImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('newNewsImagePreview');
+  const thumb   = document.getElementById('newNewsImageThumb');
+  const name    = document.getElementById('newNewsImageName');
+  const clear   = document.getElementById('newNewsImageClear');
+  thumb.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  name.textContent = file.name;
+  clear.style.display = 'inline';
+  document.getElementById('newNewsUploadStatus').textContent = '';
+  document.getElementById('newNewsImage').value = '';
+}
+
+function clearNewsImage() {
+  document.getElementById('newNewsImageFile').value = '';
+  document.getElementById('newNewsImage').value = '';
+  document.getElementById('newNewsImagePreview').style.display = 'none';
+  document.getElementById('newNewsImageName').textContent = '未選択';
+  document.getElementById('newNewsImageClear').style.display = 'none';
+}
+
+async function addNews() {
+  const dateVal = document.getElementById('newNewsDate').value;
+  const tag     = document.getElementById('newNewsTag').value;
+  const title   = document.getElementById('newNewsTitle').value.trim();
+  const body    = document.getElementById('newNewsBody').value.trim();
+  const file    = document.getElementById('newNewsImageFile').files[0];
+  if (!title || !dateVal) return;
+
+  const addBtn = document.querySelector('[data-action="addNews"]');
+  addBtn.disabled = true;
+  addBtn.textContent = '処理中...';
+
+  let imageUrl = '';
+  if (file) {
+    try {
+      document.getElementById('newNewsUploadStatus').textContent = '⏳ 画像をアップロード中...';
+      imageUrl = await uploadToCloudinary(file);
+      document.getElementById('newNewsUploadStatus').textContent = '✓ アップロード完了';
+    } catch(e) {
+      document.getElementById('newNewsUploadStatus').textContent = '⚠ 画像のアップロードに失敗しました';
+      addBtn.disabled = false;
+      addBtn.textContent = '追 加';
+      return;
+    }
+  }
+
+  const d = new Date(dateVal);
+  const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const data = { date: dateStr, tag, title, body, createdAt: new Date(dateVal).toISOString() };
+  if (imageUrl) data.imageUrl = imageUrl;
+  await _fbPush(_fbRef(_fbDb, 'news'), data);
+
+  document.getElementById('newNewsDate').value = '';
+  document.getElementById('newNewsTitle').value = '';
+  document.getElementById('newNewsBody').value = '';
+  clearNewsImage();
+  addBtn.disabled = false;
+  addBtn.textContent = '追 加';
+}
+
+async function deleteNews(id) {
+  await _fbRemove(_fbRef(_fbDb, 'news/' + id));
+}
+
+function renderEventsEditList() {
+  _fbOnValue(_fbRef(_fbDb, 'events'), snap => {
+    const container = document.getElementById('eventsEditList');
+    if (!snap.exists()) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:12px 0">まだイベントがありません</div>';
+      return;
+    }
+    const items = [];
+    snap.forEach(child => items.push({ id: child.key, ...child.val() }));
+    container.innerHTML = items.map(e => `
+      <div style="background:var(--bg3);border:1px solid var(--border);overflow:hidden" id="event-card-${e.id}">
+
+        <!-- 表示モード -->
+        <div class="event-view-${e.id}" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px">
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--gold);letter-spacing:0.2em;margin-bottom:2px">${escapeHtml(e.month || '')}</div>
+            <div style="font-size:13px;color:var(--text);margin-bottom:2px">${escapeHtml(e.title || '')}</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-bottom:2px">${escapeHtml(e.desc || '')}</div>
+            <div style="font-size:10px;color:var(--text-dim)">${escapeHtml(e.dateLabel || '')}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+            <button onclick="startEditEvent('${e.id}')" style="background:none;border:1px solid var(--border);color:var(--text-muted);width:26px;height:26px;cursor:pointer;font-size:11px" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">✏</button>
+            <button onclick="deleteEvent('${e.id}')" style="background:none;border:1px solid rgba(192,57,43,0.3);color:#e05a4a;width:26px;height:26px;cursor:pointer;font-size:12px" onmouseover="this.style.background='rgba(192,57,43,0.08)'" onmouseout="this.style.background='none'">✕</button>
+          </div>
+        </div>
+
+        <!-- 編集モード（非表示） -->
+        <div class="event-edit-${e.id}" style="display:none;padding:12px 14px;border-top:1px solid var(--border);display:none;flex-direction:column;gap:8px">
+          <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:2px">編集中</div>
+          <div style="display:flex;gap:8px">
+            <input id="edit-month-${e.id}" value="${escapeHtml(e.month || '')}" placeholder="月（例：JUNE）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;flex:1" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+            <input id="edit-title-${e.id}" value="${escapeHtml(e.title || '')}" placeholder="イベント名" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;flex:2" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+          <textarea id="edit-desc-${e.id}" placeholder="説明文..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;resize:vertical;min-height:56px;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">${escapeHtml(e.desc || '')}</textarea>
+          <input id="edit-dateLabel-${e.id}" value="${escapeHtml(e.dateLabel || '')}" placeholder="日程ラベル（例：2025年6月中旬予定）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+          <div style="display:flex;gap:8px">
+            <button onclick="saveEditEvent('${e.id}')" style="flex:1;background:var(--vermillion);border:none;color:white;padding:8px;font-family:'Noto Sans JP',sans-serif;font-size:12px;letter-spacing:0.1em;cursor:pointer">保 存</button>
+            <button onclick="cancelEditEvent('${e.id}')" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:8px 14px;font-family:'Noto Sans JP',sans-serif;font-size:12px;cursor:pointer">キャンセル</button>
+          </div>
+        </div>
+
+      </div>`).join('');
+  });
+}
+
+function startEditEvent(id) {
+  document.querySelector(`.event-view-${id}`).style.display = 'none';
+  const editEl = document.querySelector(`.event-edit-${id}`);
+  editEl.style.display = 'flex';
+}
+
+function cancelEditEvent(id) {
+  document.querySelector(`.event-view-${id}`).style.display = 'flex';
+  document.querySelector(`.event-edit-${id}`).style.display = 'none';
+}
+
+async function saveEditEvent(id) {
+  const month     = document.getElementById(`edit-month-${id}`).value.trim().toUpperCase();
+  const title     = document.getElementById(`edit-title-${id}`).value.trim();
+  const desc      = document.getElementById(`edit-desc-${id}`).value.trim();
+  const dateLabel = document.getElementById(`edit-dateLabel-${id}`).value.trim();
+  if (!title || !month) return;
+  await _fbUpdate(_fbRef(_fbDb, 'events/' + id), { month, title, desc, dateLabel });
+}
+
+async function addEvent() {
+  const month     = document.getElementById('newEventMonth').value.trim().toUpperCase();
+  const title     = document.getElementById('newEventTitle').value.trim();
+  const desc      = document.getElementById('newEventDesc').value.trim();
+  const dateLabel = document.getElementById('newEventDateLabel').value.trim();
+  if (!title || !month) return;
+  await _fbPush(_fbRef(_fbDb, 'events'), { month, title, desc, dateLabel, createdAt: new Date().toISOString() });
+  document.getElementById('newEventMonth').value = '';
+  document.getElementById('newEventTitle').value = '';
+  document.getElementById('newEventDesc').value = '';
+  document.getElementById('newEventDateLabel').value = '';
+}
+
+async function deleteEvent(id) {
+  await _fbRemove(_fbRef(_fbDb, 'events/' + id));
+}
+
+async function deleteSuggestion(id) {
+  if (!confirm('この意見を削除しますか？')) return;
+  await _fbRemove(_fbRef(_fbDb, 'suggestions/' + id));
+  // 詳細パネルが開いていたら閉じる
+  if (selectedId === id) {
+    document.getElementById('detailPanel').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+    selectedId = null;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── アンケート管理（複数対応）──
+let newQuestionCount = 0;
+
+function addQuestionField() {
+  const qi = newQuestionCount++;
+  const container = document.getElementById('newSurveyQuestions');
+  const div = document.createElement('div');
+  div.id = 'new-q-' + qi;
+  div.style.cssText = 'background:var(--bg);border:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:8px';
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:10px;letter-spacing:0.15em;color:var(--text-muted)">質問 ${qi+1}</div>
+      <button onclick="document.getElementById('new-q-${qi}').remove()" style="background:none;border:none;color:#e05a4a;cursor:pointer;font-size:14px">✕</button>
+    </div>
+    <input type="text" id="new-q-text-${qi}" placeholder="質問文を入力..." style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'">
+    <select id="new-q-type-${qi}" onchange="toggleChoicesField(${qi})" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none">
+      <option value="single">選択式（1つ選択）</option>
+      <option value="multi">選択式（複数選択）</option>
+      <option value="free">自由記述</option>
+    </select>
+    <div id="new-q-choices-wrap-${qi}">
+      <textarea id="new-q-choices-${qi}" rows="3" placeholder="選択肢（1行に1つ）&#10;例：はい&#10;いいえ" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;outline:none;width:100%;resize:vertical;line-height:1.7" onfocus="this.style.borderColor='var(--vermillion)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+  `;
+  container.appendChild(div);
+}
+
+function toggleChoicesField(qi) {
+  const type = document.getElementById('new-q-type-' + qi).value;
+  const wrap = document.getElementById('new-q-choices-wrap-' + qi);
+  if (wrap) wrap.style.display = type === 'free' ? 'none' : 'block';
+}
+
+async function createSurvey() {
+  const title = document.getElementById('newSurveyTitle').value.trim();
+  if (!title) { alert('タイトルを入力してください'); return; }
+  const questionDivs = document.querySelectorAll('#newSurveyQuestions > div');
+  if (questionDivs.length === 0) { alert('質問を1つ以上追加してください'); return; }
+  const questions = [];
+  for (const div of questionDivs) {
+    const qi      = div.id.replace('new-q-','');
+    const text    = document.getElementById('new-q-text-' + qi)?.value.trim();
+    const type    = document.getElementById('new-q-type-' + qi)?.value;
+    const choices = type !== 'free' ? (document.getElementById('new-q-choices-' + qi)?.value || '').split('\n').map(c=>c.trim()).filter(Boolean) : [];
+    if (!text) { alert('質問文を入力してください'); return; }
+    if (type !== 'free' && choices.length < 2) { alert('選択肢を2つ以上入力してください'); return; }
+    questions.push({ text, type: type === 'free' ? 'free' : 'choice', multi: type === 'multi', choices });
+  }
+  await _fbPush(_fbRef(_fbDb, 'surveys'), { title, questions, active: false, createdAt: new Date().toISOString() });
+  document.getElementById('newSurveyTitle').value = '';
+  document.getElementById('newSurveyQuestions').innerHTML = '';
+  newQuestionCount = 0;
+  alert('作成しました！');
+}
+
+function loadSurveySettings() {
+  if (loadSurveySettings._unsub) loadSurveySettings._unsub();
+  loadSurveySettings._unsub = _fbOnValue(_fbRef(_fbDb, 'surveys'), snap => {
+    const container = document.getElementById('surveysEditList');
+    if (!snap.exists()) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:12px 0">まだアンケートがありません</div>';
+      return;
+    }
+    const surveys = [];
+    snap.forEach(c => { surveys.push({ id: c.key, ...c.val() }); });
+    surveys.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+    container.innerHTML = surveys.map(s => `
+      <div style="background:var(--bg3);border:1px solid var(--border);padding:14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="flex:1;font-size:13px;color:var(--text)">${escapeHtml(s.title)}</div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);cursor:pointer;flex-shrink:0">
+            <input type="checkbox" ${s.active ? 'checked' : ''} onchange="toggleSurveyActive('${s.id}', this.checked)" style="accent-color:var(--vermillion);width:14px;height:14px">
+            公開
+          </label>
+          <button onclick="deleteSurvey('${s.id}')" style="background:none;border:1px solid rgba(192,57,43,0.3);color:#e05a4a;width:26px;height:26px;cursor:pointer;font-size:12px;flex-shrink:0">✕</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">${(s.questions||[]).length}問</div>
+        <div id="survey-results-${s.id}">
+          <button onclick="toggleSurveyResults('${s.id}')" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:5px 14px;font-family:'Noto Sans JP',sans-serif;font-size:11px;cursor:pointer;letter-spacing:0.1em">集計結果を見る ▼</button>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+
+async function toggleSurveyActive(id, active) {
+  await _fbUpdate(_fbRef(_fbDb, 'surveys/' + id), { active });
+}
+
+async function deleteSurvey(id) {
+  if (!confirm('このアンケートを削除しますか？')) return;
+  await _fbRemove(_fbRef(_fbDb, 'surveys/' + id));
+  await _fbRemove(_fbRef(_fbDb, 'surveyResults/' + id));
+  await _fbRemove(_fbRef(_fbDb, 'surveyFreeTexts/' + id));
+}
+
+async function toggleSurveyResults(surveyId) {
+  const container = document.getElementById('survey-results-' + surveyId);
+  if (container.dataset.open === '1') {
+    container.innerHTML = `<button onclick="toggleSurveyResults('${surveyId}')" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:5px 14px;font-family:'Noto Sans JP',sans-serif;font-size:11px;cursor:pointer;letter-spacing:0.1em">集計結果を見る ▼</button>`;
+    container.dataset.open = '0';
+    return;
+  }
+  container.dataset.open = '1';
+
+  const [sSnap, rSnap] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js').then(m => m.get(m.ref(_fbDb, 'surveys/' + surveyId))),
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js').then(m => m.get(m.ref(_fbDb, 'surveyResults/' + surveyId))),
+  ]);
+  const s       = sSnap.exists() ? sSnap.val() : {};
+  const results = rSnap.exists() ? rSnap.val() : {};
+  const questions = s.questions || [];
+
+  container.innerHTML = `
+    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
+      ${questions.map((q, qi) => {
+        if (q.type === 'free') return `<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${escapeHtml(q.text)}</div><div style="font-size:11px;color:var(--text-dim)">自由記述</div></div>`;
+        const qr    = results['q'+qi] || {};
+        const total = Object.values(qr).reduce((a,b)=>a+(typeof b==='number'?b:0),0);
+        return `<div style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">${escapeHtml(q.text)}（合計${total}票）</div>
+          ${(q.choices||[]).map((c,ci) => {
+            const count = qr['c'+ci]||0;
+            const pct   = total>0?Math.round(count/total*100):0;
+            return `<div style="margin-bottom:5px">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:2px"><span>${escapeHtml(c)}</span><span>${count}票 (${pct}%)</span></div>
+              <div style="height:4px;background:var(--bg);border:1px solid var(--border)"><div style="height:100%;background:var(--vermillion);width:${pct}%"></div></div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('')}
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="resetSurveyResults('${surveyId}')" style="background:none;border:1px solid rgba(192,57,43,0.3);color:#e05a4a;padding:5px 14px;font-family:'Noto Sans JP',sans-serif;font-size:11px;cursor:pointer;letter-spacing:0.1em">集計リセット</button>
+        <button onclick="toggleSurveyResults('${surveyId}')" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:5px 14px;font-family:'Noto Sans JP',sans-serif;font-size:11px;cursor:pointer;letter-spacing:0.1em">閉じる ▲</button>
+      </div>
+    </div>
+  `;
+}
+
+async function resetSurveyResults(id) {
+  if (!confirm('集計結果をリセットしますか？')) return;
+  await _fbRemove(_fbRef(_fbDb, 'surveyResults/' + id));
+  await _fbRemove(_fbRef(_fbDb, 'surveyFreeTexts/' + id));
+  alert('リセットしました！');
+}
+
+
+function loadCountdownSettings() {
+  if (loadCountdownSettings._unsub) loadCountdownSettings._unsub();
+  loadCountdownSettings._unsub = _fbOnValue(_fbRef(_fbDb, 'countdown'), snap => {
+    if (!snap.exists()) return;
+    const d = snap.val();
+    document.getElementById('cdName').value   = d.name || '';
+    document.getElementById('cdDate').value   = d.date ? d.date.slice(0,16) : '';
+    document.getElementById('cdActive').checked = !!d.active;
+  });
+}
+
+async function saveCountdown() {
+  const name   = document.getElementById('cdName').value.trim();
+  const date   = document.getElementById('cdDate').value;
+  const active = document.getElementById('cdActive').checked;
+  if (!name || !date) { alert('イベント名と日時を入力してください'); return; }
+  await _fbSet(_fbRef(_fbDb, 'countdown'), { name, date, active });
+  alert('保存しました！');
+}
+
+
+
+window.addEventListener('firebase-ready', () => init());
+
+// ── イベント委譲（全関数定義後に登録） ──
+document.addEventListener('click', function(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+
+  if (action === 'switchView') {
+    const navEl = el.closest('.nav-item') || el;
+    switchView(el.dataset.view, navEl);
+  } else if (action === 'filterByStatus') {
+    filterByStatus(el.dataset.status, el.closest('.nav-item'));
+  } else if (action === 'setFilter')      { setFilter(el.dataset.filter, el); }
+  else if (action === 'refreshData')      { refreshData(); }
+  else if (action === 'exportCSV')        { exportCSV(); }
+  else if (action === 'closeDetail')      { closeDetail(); }
+  else if (action === 'changeStatus')     { changeStatus(el.dataset.status); }
+  else if (action === 'setAsWeekly')      { setAsWeekly(); }
+  else if (action === 'saveNote')         { saveNote(); }
+  else if (action === 'saveWeekly')       { saveWeekly(); }
+  else if (action === 'addWeekly')        { addWeekly(); }
+  else if (action === 'addFaq')           { addFaq(); }
+  else if (action === 'addCategory')      { addCategory(); }
+  else if (action === 'addNews')          { addNews(); }
+  else if (action === 'addEvent')         { addEvent(); }
+});
+</script>
+</body>
+</html>
